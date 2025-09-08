@@ -1,0 +1,183 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat Assistant - Skill Exchange</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    .chatbox-container {
+      max-width: 500px;
+      margin: 3rem auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chatbox-header {
+      background: #2e8b57;
+      color: #fff;
+      padding: 1rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .chatbox-messages {
+      padding: 1rem;
+      height: 300px;
+      overflow-y: auto;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .chat-message {
+      max-width: 80%;
+      padding: 0.75rem 1rem;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .chat-message.bot {
+      background: #e3f7eb;
+      align-self: flex-start;
+    }
+
+    .chat-message.user {
+      background: #d1e7ff;
+      align-self: flex-end;
+    }
+
+    .chatbox-input {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid #eee;
+      background: #fff;
+    }
+
+    .chatbox-input input {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .chatbox-input button {
+      margin-left: 0.5rem;
+      background-color: #2e8b57;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">Skill Exchange</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="listings.html">Skill Board</a></li>
+        <li><a href="post.html">Create Post</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="#">Chat Bot</a></li>
+        <li class="profile-dropdown">
+  <img src="3.jpg" alt="Profile" class="profile-pic-nav" id="profilePicNav">
+  <ul class="dropdown-menu" id="dropdownMenu">
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="listings.html">Skill Board</a></li>
+    <li><a href="post.html">Create Post</a></li>
+    <li><a href="profile.html">My Profile</a></li>
+    <li><a href="#" id="logoutBtn">Logout</a></li>
+  </ul>
+</li>
+
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="chatbox-container">
+      <div class="chatbox-header">Hi! Need help with anything?</div>
+      <div id="chatMessages" class="chatbox-messages">
+        <div class="chat-message bot">👋 Hello! How can I assist you today?</div>
+      </div>
+      <form id="chatForm" class="chatbox-input">
+        <input type="text" id="userInput" placeholder="Type a message..." required />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+  const profilePic = document.getElementById("profilePicNav");
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (profilePic && dropdownMenu) {
+    profilePic.addEventListener("click", () => {
+      dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".profile-dropdown")) {
+        dropdownMenu.style.display = "none";
+      }
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("currentUsername");
+      alert("👋 You have been logged out.");
+      window.location.href = "index.html";
+    });
+  }
+    const chatForm = document.getElementById('chatForm');
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+
+    chatForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const message = userInput.value.trim();
+      if (message === '') return;
+
+      const userMsg = document.createElement('div');
+      userMsg.classList.add('chat-message', 'user');
+      userMsg.textContent = message;
+      chatMessages.appendChild(userMsg);
+
+      setTimeout(() => {
+        const botMsg = document.createElement('div');
+        botMsg.classList.add('chat-message', 'bot');
+
+        if (message.toLowerCase().includes("post")) {
+          botMsg.textContent = "📝 You can post a skill or request from the Create Post page.";
+        } else if (message.toLowerCase().includes("find") || message.toLowerCase().includes("match")) {
+          botMsg.textContent = "🔍 Visit the Skill Board to find help or offers.";
+        } else if (message.toLowerCase().includes("tutor")) {
+          botMsg.textContent = "📘 I found a Math Tutoring post in your area! Check the listings.";
+        } else {
+          botMsg.textContent = "🤖 I'm still learning! Try asking about posting or finding a skill.";
+        }
+
+        chatMessages.appendChild(botMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 500);
+
+      userInput.value = '';
+    });
+  </script>
+</body>
+</html> -->

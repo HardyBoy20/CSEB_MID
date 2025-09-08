@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill Listings - Skill Exchange</title>
+    <script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
+    <script src="https://files.bpcontent.cloud/2025/08/16/16/20250816161859-V1ES8PM4.js" defer></script>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f7fdfc;
+      margin: 0;
+    }
+
+    .navbar {
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2e8b57;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      background-color: #2e8b57;
+      color: #fff;
+    }
+
+    .listing-container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .filter-bar select,
+    .filter-bar input {
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .card {
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .card h3 {
+      margin-bottom: 0.5rem;
+      color: #2e8b57;
+    }
+
+    .card .meta {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 0.75rem;
+    }
+
+    .connect-btn {
+      background-color: #2e8b57;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .connect-btn:hover {
+      background-color: #267a4d;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">Skill Exchange</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="#">Skill Board</a></li>
+        <li><a href="post.html">Create Post</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li class="profile-dropdown">
+  <img src="3.jpg" alt="Profile" class="profile-pic-nav" id="profilePicNav">
+  <ul class="dropdown-menu" id="dropdownMenu">
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="listings.html">Skill Board</a></li>
+    <li><a href="post.html">Create Post</a></li>
+    <li><a href="profile.html">My Profile</a></li>
+    <li><a href="#" id="logoutBtn">Logout</a></li>
+  </ul>
+</li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="listing-container">
+    <h2>All Skill Listings</h2>
+
+    <div class="filter-bar">
+      <select id="filterType">
+        <option value="">All Types</option>
+        <option value="Offer">Offer</option>
+        <option value="Request">Request</option>
+      </select>
+      <select id="filterCategory">
+        <option value="">All Categories</option>
+        <option value="Tutoring">Tutoring</option>
+        <option value="Tech Support">Tech Support</option>
+        <option value="Home Help">Home Help</option>
+        <option value="Gardening">Gardening</option>
+        <option value="Other">Other</option>
+      </select>
+      <input type="text" id="searchKeyword" placeholder="Search by keyword..." />
+    </div>
+
+    <div id="postCards"></div>
+  </main>
+
+  <script>
+const profilePic = document.getElementById("profilePicNav");
+const dropdownMenu = document.getElementById("dropdownMenu");
+const logoutBtn = document.getElementById("logoutBtn");
+
+// Profile dropdown toggle
+if (profilePic && dropdownMenu) {
+  profilePic.addEventListener("click", () => {
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".profile-dropdown")) {
+      dropdownMenu.style.display = "none";
+    }
+  });
+}
+
+// Logout button
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("currentUsername");
+    localStorage.removeItem("userContact"); // clear contact too
+    alert("👋 You have been logged out.");
+    window.location.href = "index.html";
+  });
+}
+
+// Load posts from server
+async function loadPosts() {
+  const container = document.getElementById("postCards");
+  const type = document.getElementById("filterType").value;
+  const category = document.getElementById("filterCategory").value;
+  const keyword = document.getElementById("searchKeyword").value.toLowerCase();
+
+  container.innerHTML = "";
+
+  try {
+    const response = await fetch("/api/posts");
+    const posts = await response.json();
+
+    const filtered = posts.filter(post => {
+      return (
+        (type === "" || post.type === type) &&
+        (category === "" || post.category === category) &&
+        (post.title.toLowerCase().includes(keyword) || post.description.toLowerCase().includes(keyword))
+      );
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = "<p>No posts found matching filters.</p>";
+      return;
+    }
+
+    filtered.forEach(post => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.display = "flex";
+      card.style.gap = "1rem";
+      card.style.alignItems = "flex-start";
+
+      const imageHTML = post.image
+        ? `<div style="width:120px; height:120px; border-radius:12px; overflow:hidden;">
+             <img src="${post.image}" alt="Post Image" style="width:100%; height:100%; object-fit:cover;">
+           </div>`
+        : `<div style="width:120px; height:120px; background:#ccc; border-radius:12px;"></div>`;
+
+      card.innerHTML = `
+        ${imageHTML}
+        <div style="flex:1;">
+          <h3>${post.title}</h3>
+          <div class="meta"><strong>${post.type}</strong> | ${post.category} | ${post.location}</div>
+          <p>${post.description}</p>
+          <div class="meta">Posted by: <strong>${post.name || "Anonymous"}</strong></div>
+          <div class="meta">Availability: ${post.availability}</div>
+          ${post.contact ? `<div class="meta">Contact: ${post.contact}</div>` : ""}
+          <button class="connect-btn" onclick="connectToPost('${post._id}', this)">Connect</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Failed to load posts:", error);
+    container.innerHTML = "<p>Error loading posts. Please try again later.</p>";
+  }
+}
+
+// Connect button function
+async function connectToPost(postId, btn) {
+  btn.disabled = true;
+  btn.innerText = "Connecting...";
+
+  const userContact = localStorage.getItem("userContact");
+  if (!userContact) {
+    alert("⚠️ Please log in to connect with others.");
+    btn.disabled = false;
+    btn.innerText = "Connect";
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/posts/connect/${postId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: userContact }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert("📩 SMS sent to the skill owner!");
+      btn.innerText = "Connected";
+    } else {
+      alert("❌ Failed to send SMS");
+      btn.disabled = false;
+      btn.innerText = "Connect";
+    }
+  } catch (error) {
+    console.error("SMS error:", error);
+    alert("An error occurred while connecting.");
+    btn.disabled = false;
+    btn.innerText = "Connect";
+  }
+}
+
+// Filter events
+document.getElementById("filterType").addEventListener("change", loadPosts);
+document.getElementById("filterCategory").addEventListener("change", loadPosts);
+document.getElementById("searchKeyword").addEventListener("input", loadPosts);
+
+// Initial load
+loadPosts();
+</script>
+</body>
+</html>

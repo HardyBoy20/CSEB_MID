@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Post - Skill Exchange</title>
+    <script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
+    <script src="https://files.bpcontent.cloud/2025/08/16/16/20250816161859-V1ES8PM4.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f7fdfc;
+      margin: 0;
+    }
+    .navbar {
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2e8b57;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.2rem;
+      list-style: none;
+      align-items: center;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .nav-links a:hover,
+    .nav-links a.active {
+      background-color: #2e8b57;
+      color: #fff;
+    }
+
+    .profile-dropdown {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .profile-pic-nav {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 48px;
+      right: 0;
+      background-color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      display: none;
+      list-style: none;
+      padding: 0;
+      min-width: 150px;
+    }
+
+    .dropdown-menu li {
+      border-bottom: 1px solid #eee;
+    }
+
+    .dropdown-menu li a {
+      display: block;
+      padding: 10px 16px;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .dropdown-menu li a:hover {
+      background-color: #f2f2f2;
+    }
+
+    .post-wrapper {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+      animation: fadeInLeft 0.6s ease;
+    }
+
+    .post-wrapper h2 {
+      color: #2e8b57;
+      margin-bottom: 1rem;
+    }
+
+    .form-row {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-row label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .form-row input,
+    .form-row textarea,
+    .form-row select {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .form-radio-group {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .post-id {
+      font-size: 0.9rem;
+      color: #777;
+      margin-bottom: 1rem;
+    }
+
+    .btn-primary {
+      background-color: #2e8b57;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      background-color: #247548;
+    }
+
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">Skill Exchange</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="listings.html">Skill Board</a></li>
+        <li><a href="#" class="active">Create Post</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li class="profile-dropdown">
+          <img src="3.jpg" alt="Profile" class="profile-pic-nav" id="profilePicNav" />
+          <ul class="dropdown-menu" id="dropdownMenu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="listings.html">Skill Board</a></li>
+    <li><a href="post.html">Create Post</a></li>
+    <li><a href="profile.html">My Profile</a></li>
+    <li><a href="#" id="logoutBtn">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="post-wrapper">
+      <h2>Create a New Post</h2>
+      <form id="postForm" enctype="multipart/form-data">
+        <div class="form-radio-group">
+          <label><input type="radio" name="type" value="Offer" required /> Offer</label>
+          <label><input type="radio" name="type" value="Request" required /> Request</label>
+        </div>
+
+        <div class="post-id">Post ID: <span id="postId"></span></div>
+
+        <div class="form-row">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="form-row">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required />
+        </div>
+
+        <div class="form-row">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="4" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="">Select</option>
+            <option value="Tutoring">Tutoring</option>
+            <option value="Tech Support">Tech Support</option>
+            <option value="Home Help">Home Help</option>
+            <option value="Gardening">Gardening</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="location">Location</label>
+          <input type="text" id="location" name="location" required />
+        </div>
+
+        <div class="form-row">
+          <label for="availability">Availability</label>
+          <input type="text" id="availability" name="availability" required />
+        </div>
+
+        <div class="form-row">
+          <label for="contact">Contact Info (optional)</label>
+          <input type="text" id="contact" name="contact" />
+        </div>
+
+        <div class="form-radio-group">
+          <label><input type="radio" name="tag" value="One-time" required /> One-time</label>
+          <label><input type="radio" name="tag" value="Ongoing" required /> Ongoing</label>
+        </div>
+
+        <div class="form-row">
+          <label for="image">Profile Pic</label>
+          <input type="file" id="image" name="image" accept="image/*" />
+        </div>
+
+        <button type="submit" class="btn-primary">Submit Post</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const profilePic = document.getElementById("profilePicNav");
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    profilePic.addEventListener("click", () => {
+      dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".profile-dropdown")) {
+        dropdownMenu.style.display = "none";
+      }
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("currentUsername");
+      alert("👋 You have been logged out.");
+      window.location.href = "index.html";
+    });
+
+    const postId = "POST-" + Math.floor(100000 + Math.random() * 900000);
+    document.getElementById("postId").textContent = postId;
+
+    document.getElementById("postForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this); // includes image file
+
+      try {
+        const response = await fetch("/api/posts", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error("Failed to save post");
+
+        alert("✅ Post submitted successfully!");
+        this.reset();
+        document.getElementById("postId").textContent = "POST-" + Math.floor(100000 + Math.random() * 900000);
+      } catch (err) {
+        alert("❌ Error submitting post: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

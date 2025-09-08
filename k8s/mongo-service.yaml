@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  labels:
+    app: mongodb
+    component: service
+spec:
+  type: ClusterIP
+  ports:
+  - name: mongodb
+    port: 27017
+    targetPort: 27017
+    protocol: TCP
+  selector:
+    app: mongodb
+  clusterIP: None  # Headless service for StatefulSet
+
+---
+# Regular ClusterIP service for application access
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  labels:
+    app: mongodb
+    component: cluster-service
+spec:
+  type: ClusterIP
+  ports:
+  - name: mongodb
+    port: 27017
+    targetPort: 27017
+    protocol: TCP
+  selector:
+    app: mongodb
+
+---
+# NodePort service for external access (development/debugging only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-nodeport
+  labels:
+    app: mongodb
+    component: nodeport-service
+spec:
+  type: NodePort
+  ports:
+  - name: mongodb
+    port: 27017
+    targetPort: 27017
+    nodePort: 30017
+    protocol: TCP
+  selector:
+    app: mongodb
+
+---
+# Network Policy for MongoDB access control
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mongodb-network-policy
+  labels:
+    app: mongodb
+spec:
+  podSelector:
+    matchLabels:
+      app: mongodb
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    # Allow access from application pods
+    - podSelector:
+        matchLabels:
+          app: skillexchange-app
+    # Allow access from same namespace
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 27017
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow outgoing connections for health checks
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 27017
+
+---
+# Service Monitor for Prometheus (if using Prometheus)
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: mongodb-monitor
+#   labels:
+#     app: mongodb
+#     component: monitoring
+# spec:
+#   selector:
+#     matchLabels:
+#       app: mongodb
+#   endpoints:
+#   - port: mongodb
+#     interval: 30s
+#     path: /metrics
+#     scheme: http

@@ -1,0 +1,161 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: skillexchange-app-service
+  labels:
+    app: skillexchange-app
+    component: service
+  annotations:
+    # AWS Load Balancer annotations (if using AWS)
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout: "5"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "30"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/"
+    
+    # GCP Load Balancer annotations (if using GCP)
+    # cloud.google.com/load-balancer-type: External
+    # cloud.google.com/backend-config: '{"default": "skillexchange-backendconfig"}'
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 3000
+    protocol: TCP
+  selector:
+    app: skillexchange-app
+  sessionAffinity: None
+  # External traffic policy for better performance
+  externalTrafficPolicy: Cluster
+
+---
+# ClusterIP Service for internal communication
+apiVersion: v1
+kind: Service
+metadata:
+  name: skillexchange-app-internal
+  labels:
+    app: skillexchange-app
+    component: internal-service
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+    protocol: TCP
+  selector:
+    app: skillexchange-app
+
+---
+# NodePort Service (alternative to LoadBalancer for testing)
+apiVersion: v1
+kind: Service
+metadata:
+  name: skillexchange-app-nodeport
+  labels:
+    app: skillexchange-app
+    component: nodeport-service
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+    nodePort: 30080
+    protocol: TCP
+  selector:
+    app: skillexchange-app
+
+---
+# Ingress for HTTP/HTTPS routing (if using ingress controller)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: skillexchange-app-ingress
+  labels:
+    app: skillexchange-app
+    component: ingress
+  annotations:
+    # NGINX Ingress annotations
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # Certificate manager annotation for automatic SSL
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit-rps: "100"
+    nginx.ingress.kubernetes.io/rate-limit-connections: "50"
+    
+    # CORS configuration
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
+    
+    # Session affinity
+    nginx.ingress.kubernetes.io/affinity: cookie
+    nginx.ingress.kubernetes.io/affinity-mode: persistent
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+spec:
+  tls:
+  - hosts:
+    - skillexchange.yourdomain.com
+    - www.skillexchange.yourdomain.com
+    secretName: skillexchange-tls-secret
+  rules:
+  - host: skillexchange.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: skillexchange-app-internal
+            port:
+              number: 3000
+  - host: www.skillexchange.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: skillexchange-app-internal
+            port:
+              number: 3000
+
+---
+# BackendConfig for GCP (if using GCP)
+# apiVersion: cloud.google.com/v1
+# kind: BackendConfig
+# metadata:
+#   name: skillexchange-backendconfig
+#   labels:
+#     app: skillexchange-app
+# spec:
+#   healthCheck:
+#     checkIntervalSec: 30
+#     timeoutSec: 5
+#     healthyThreshold: 2
+#     unhealthyThreshold: 3
+#     type: HTTP
+#     requestPath: /
+#     port: 3000
+#   sessionAffinity:
+#     affinityType: CLIENT_IP
+#     affinityCookieTtlSec: 3600
+#   timeoutSec: 30
+#   connectionDraining:
+#     drainingTimeoutSec: 60

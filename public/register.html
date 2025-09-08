@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register - Skill Exchange</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    .input-group small {
+      color: red;
+      font-size: 0.8rem;
+      display: none;
+    }
+    .input-group.invalid input {
+      border-color: red;
+    }
+    .input-group.invalid small {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">Skill Exchange</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Login</a></li>
+        <li><a href="#" class="active">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="auth-container">
+    <div class="auth-card">
+      <h2>Create Your Account</h2>
+      <form id="registerForm" novalidate>
+        <div class="input-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" required />
+          <small>Only letters allowed</small>
+        </div>
+
+        <div class="input-group">
+          <label for="middleName">Middle Name (optional)</label>
+          <input type="text" id="middleName" />
+        </div>
+
+        <div class="input-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" required />
+          <small>Only letters allowed</small>
+        </div>
+
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required />
+          <small>Enter a valid email</small>
+        </div>
+
+        <div class="input-group">
+          <label for="phone">Mobile Number</label>
+          <input type="tel" id="phone" required />
+          <small>Enter a valid 10-digit phone number</small>
+        </div>
+
+        <div class="input-group">
+          <label for="aadhaar">Aadhaar Number</label>
+          <input type="text" id="aadhaar" required />
+          <small>Enter a valid 12-digit Aadhaar number</small>
+        </div>
+
+        <div class="input-group">
+          <label for="address">Address</label>
+          <input type="text" id="address" required />
+        </div>
+
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" required />
+          <small>Username must be at least 4 characters (letters or numbers only)</small>
+        </div>
+
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required />
+          <small>Password must be at least 8 characters</small>
+        </div>
+
+        <div class="input-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" required />
+          <small>Passwords must match</small>
+        </div>
+
+        <button type="submit" class="btn-primary">Register</button>
+      </form>
+      <p class="text-sm">Already have an account? <a href="index.html">Login here</a></p>
+    </div>
+    <aside class="info-box">
+      <h2>Why Join Skill Exchange?</h2>
+      <ul>
+        <li>🌐 Connect with peers across industries</li>
+        <li>📚 Learn new skills or share your expertise</li>
+        <li>🤝 Contribute to a helpful community</li>
+        <li>🎤 Apply to host community talks</li>
+        <li>💼 Build your reputation and grow your profile</li> 
+      </ul>
+    </aside>
+  </main>
+
+  <script>
+    const form = document.getElementById('registerForm');
+
+    const showError = (field, message) => {
+      const group = field.parentElement;
+      group.classList.add("invalid");
+      group.querySelector("small").textContent = message;
+      group.querySelector("small").style.display = "block";
+    };
+
+    const clearError = (field) => {
+      const group = field.parentElement;
+      group.classList.remove("invalid");
+      group.querySelector("small").style.display = "none";
+    };
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      let isValid = true;
+
+      const firstName = document.getElementById('firstName');
+      const lastName = document.getElementById('lastName');
+      const email = document.getElementById('email');
+      const phone = document.getElementById('phone');
+      const aadhaar = document.getElementById('aadhaar');
+      const username = document.getElementById('username');
+      const password = document.getElementById('password');
+      const confirmPassword = document.getElementById('confirmPassword');
+      // Regex (Regular Expression) is a pattern-matching language used to search, validate, or manipulate strings.
+      const nameRegex = /^[A-Za-z]+$/; //Only letters
+      const phoneRegex = /^\d{10}$/; //Must be 10 digits
+      const aadhaarRegex = /^\d{12}$/; //Must be 12 digits only
+      const usernameRegex = /^[A-Za-z0-9]{4,}$/; //Minimum 4 characters, alphanumeric only
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; //Basic format
+
+      if (!nameRegex.test(firstName.value.trim())) {
+        showError(firstName, "Only letters allowed");
+        isValid = false;
+      } else clearError(firstName);
+
+      if (!nameRegex.test(lastName.value.trim())) {
+        showError(lastName, "Only letters allowed");
+        isValid = false;
+      } else clearError(lastName);
+
+      if (!emailRegex.test(email.value.trim())) {
+        showError(email, "Enter a valid email");
+        isValid = false;
+      } else clearError(email);
+
+      if (!phoneRegex.test(phone.value.trim())) {
+        showError(phone, "Enter a valid 10-digit phone number");
+        isValid = false;
+      } else clearError(phone);
+
+      if (!aadhaarRegex.test(aadhaar.value.trim())) {
+        showError(aadhaar, "Enter a valid 12-digit Aadhaar number");
+        isValid = false;
+      } else clearError(aadhaar);
+
+      if (!usernameRegex.test(username.value.trim())) {
+        showError(username, "Username must be at least 4 characters (letters or numbers only)");
+        isValid = false;
+      } else clearError(username);
+
+      if (password.value.length < 8) {
+        showError(password, "Password must be at least 8 characters");
+        isValid = false;
+      } else clearError(password);
+
+      if (password.value !== confirmPassword.value) {
+        showError(confirmPassword, "Passwords must match");
+        isValid = false;
+      } else clearError(confirmPassword);
+
+      if (!isValid) return;
+
+      const data = {
+        firstName: firstName.value.trim(),
+        middleName: document.getElementById('middleName').value.trim(),
+        lastName: lastName.value.trim(),
+        email: email.value.trim(),
+        phone: phone.value.trim(),
+        aadhaar: aadhaar.value.trim(),
+        address: document.getElementById('address').value.trim(),
+        username: username.value.trim(),
+        password: password.value.trim()
+      };
+
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.message.includes("Successfully")) {
+            localStorage.setItem("currentUsername", result.username);
+            alert("✅ Registration Successful!");
+            window.location.href = "dashboard.html";
+          } else {
+            alert("❌ " + result.message);
+          }
+        })
+        .catch(err => alert("❌ Server Error"));
+    });
+  </script>
+</body>
+</html>

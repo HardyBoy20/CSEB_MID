@@ -1,0 +1,150 @@
+---
+- name: Configure Jenkins Server on EC2 Ubuntu
+  hosts: jenkins_servers
+  become: yes
+  vars:
+    jenkins_admin_username: admin
+    jenkins_admin_password: "{{ vault_jenkins_admin_password | default('admin123') }}"
+    jenkins_plugins:
+      - git
+      - workflow-aggregator
+      - docker-workflow
+      - kubernetes
+      - aws-credentials
+      - pipeline-stage-view
+      - blueocean
+      - github
+      - docker-commons
+      - amazon-ecr
+
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - openjdk-11-jdk
+          - wget
+          - gnupg
+          - software-properties-common
+          - apt-transport-https
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Add Jenkins GPG key
+      apt_key:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        state: present
+
+    - name: Add Jenkins repository
+      apt_repository:
+        repo: "deb https://pkg.jenkins.io/debian-stable binary/"
+        state: present
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Jenkins service
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Install Docker
+      block:
+        - name: Add Docker GPG key
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+
+        - name: Add Docker repository
+          apt_repository:
+            repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            state: present
+
+        - name: Install Docker CE
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-compose-plugin
+            state: present
+
+        - name: Add jenkins user to docker group
+          user:
+            name: jenkins
+            groups: docker
+            append: yes
+
+    - name: Install kubectl
+      block:
+        - name: Download kubectl
+          get_url:
+            url: "https://dl.k8s.io/release/{{ kubectl_version | default('v1.28.0') }}/bin/linux/amd64/kubectl"
+            dest: /usr/local/bin/kubectl
+            mode: '0755'
+
+        - name: Verify kubectl installation
+          command: kubectl version --client
+          register: kubectl_version_output
+
+    - name: Install AWS CLI
+      block:
+        - name: Download AWS CLI
+          unarchive:
+            src: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+            dest: /tmp
+            remote_src: yes
+
+        - name: Install AWS CLI
+          command: /tmp/aws/install
+          creates: /usr/local/bin/aws
+
+    - name: Configure firewall for Jenkins
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+      loop:
+        - "8080"
+        - "50000"
+
+    - name: Wait for Jenkins to start
+      wait_for:
+        port: 8080
+        host: localhost
+        delay: 30
+        timeout: 300
+
+    - name: Get Jenkins initial admin password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_initial_password
+      failed_when: false
+
+    - name: Display Jenkins initial setup information
+      debug:
+        msg: |
+          Jenkins is now installed and running!
+          Access it at: http://{{ ansible_default_ipv4.address }}:8080
+          Initial admin password: {{ jenkins_initial_password.stdout if jenkins_initial_password.rc == 0 else 'Check /var/lib/jenkins/secrets/initialAdminPassword manually' }}
+          
+          Next steps:
+          1. Complete Jenkins setup wizard
+          2. Install suggested plugins
+          3. Create admin user
+          4. Configure AWS credentials
+          5. Configure Docker Hub credentials
+          6. Set up GitHub webhook
+
+  handlers:
+    - name: restart jenkins
+      systemd:
+        name: jenkins
+        state: restarted

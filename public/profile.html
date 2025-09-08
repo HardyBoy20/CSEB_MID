@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Skill Exchange</title>
+  <!-- the "engine" that runs the chat window. -->
+    <script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
+  <!-- the unique config file Botpress generated for your chatbot. -->
+    <script src="https://files.bpcontent.cloud/2025/08/16/16/20250816161859-V1ES8PM4.js" defer></script>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">Skill Exchange</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="listings.html">Skill Board</a></li>
+        <li><a href="post.html">Create Post</a></li>
+        <li><a href="#">Profile</a></li>
+        <li class="profile-dropdown">
+  <img src="3.jpg" alt="Profile" class="profile-pic-nav" id="profilePicNav">
+  <ul class="dropdown-menu" id="dropdownMenu">
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="listings.html">Skill Board</a></li>
+    <li><a href="post.html">Create Post</a></li>
+    <li><a href="profile.html">My Profile</a></li>
+    <li><a href="#" id="logoutBtn">Logout</a></li>
+  </ul>
+</li>
+
+      </ul>
+    </nav>
+  </header>
+
+  <main class="auth-container" style="flex-direction: column; align-items: center;">
+  <div class="auth-card" style="width: 100%; max-width: 500px; text-align: center;">
+    <h2>Your Profile</h2>
+    
+    <!-- Profile Picture Upload -->
+    <div>
+      <img id="profilePic" src="3.jpg" alt="Profile" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; margin-bottom: 1rem; border: 2px solid #2e8b57;">
+      <input type="file" id="picInput" accept="image/*" style="display: none;" />
+      <br />
+      <button type="button" onclick="document.getElementById('picInput').click()" class="btn-primary" style="width: auto;">Change Picture</button>
+    </div>
+
+    <!-- Editable Form -->
+    <form id="profileForm" style="margin-top: 2rem;">
+      <div class="input-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" disabled />
+      </div>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" disabled />
+      </div>
+      <div class="input-group">
+        <label for="phone">Mobile</label>
+        <input type="tel" id="phone" disabled />
+      </div>
+      <div class="input-group">
+        <label for="address">Address</label>
+        <input type="text" id="address" disabled />
+      </div>
+
+      <!-- Password Change Fields -->
+      <div id="passwordSection" style="display: none;">
+        <div class="input-group">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" />
+        </div>
+        <div class="input-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" />
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <button type="button" id="editBtn" class="btn-primary">Edit Profile</button>
+        <button type="submit" id="saveBtn" class="btn-primary" style="display: none;">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</main>
+<script>
+  const nameField = document.getElementById('name');
+  const emailField = document.getElementById('email');
+  const phoneField = document.getElementById('phone');
+  const addressField = document.getElementById('address');
+  const profilePic = document.getElementById('profilePic');
+  const picInput = document.getElementById('picInput');
+
+  const newPassword = document.getElementById('newPassword');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const passwordSection = document.getElementById('passwordSection');
+
+  const editBtn = document.getElementById('editBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const form = document.getElementById('profileForm');
+
+  // Load from localStorage on page load
+  window.onload = async () => {
+    const username = localStorage.getItem("currentUsername");
+    if (!username) {
+      alert("No user logged in.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/profile/${username}`);
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const user = await res.json();
+
+      nameField.value = user.username;
+      emailField.value = user.email || '';
+      phoneField.value = user.phone || '';
+      addressField.value = user.address || '';
+    } catch (err) {
+      alert("Error loading profile: " + err.message);
+    }
+
+    const storedPic = localStorage.getItem('user_pic');
+    if (storedPic) profilePic.src = storedPic;
+  };
+
+  // Edit button
+  editBtn.onclick = () => {
+    [emailField, phoneField, addressField].forEach(el => el.disabled = false);
+    passwordSection.style.display = 'block';
+    saveBtn.style.display = 'inline-block';
+    editBtn.style.display = 'none';
+  };
+
+  // Form submit
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const username = localStorage.getItem("currentUsername");
+    if (!username) {
+      alert("No user logged in.");
+      return;
+    }
+
+    // Optional password validation
+    if (newPassword.value || confirmPassword.value) {
+      if (newPassword.value.length < 8) {
+        alert("⚠️ Password must be at least 8 characters.");
+        return;
+      }
+      if (newPassword.value !== confirmPassword.value) {
+        alert("❌ Passwords do not match.");
+        return;
+      }
+    }
+
+    const updatedProfile = {
+      email: emailField.value,
+      phone: phoneField.value,
+      address: addressField.value,
+    };
+
+    if (newPassword.value) {
+      updatedProfile.password = newPassword.value;
+    }
+
+    try {
+      const res = await fetch(`/api/profile/${username}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedProfile),
+      });
+
+      if (!res.ok) throw new Error("Failed to update profile");
+      const result = await res.json();
+
+      // ✅ Update localStorage after success
+      localStorage.setItem("user_password", newPassword.value || localStorage.getItem("user_password"));
+      localStorage.setItem("user_email", emailField.value);
+      localStorage.setItem("user_phone", phoneField.value);
+      localStorage.setItem("user_address", addressField.value);
+
+      // Reset UI
+      [emailField, phoneField, addressField].forEach(el => el.disabled = true);
+      passwordSection.style.display = 'none';
+      saveBtn.style.display = 'none';
+      editBtn.style.display = 'inline-block';
+      newPassword.value = "";
+      confirmPassword.value = "";
+
+      alert("✅ Profile updated!");
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
+  // Profile Picture Change
+  picInput.addEventListener('change', function () {
+    const file = this.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        profilePic.src = e.target.result;
+        localStorage.setItem('user_pic', e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+</script>
+</body>
+</html>

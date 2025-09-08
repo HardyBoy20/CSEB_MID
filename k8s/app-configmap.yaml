@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skillexchange-app-config
+  labels:
+    app: skillexchange-app
+    component: config
+data:
+  # Application configuration
+  NODE_ENV: "production"
+  PORT: "3000"
+  
+  # Database configuration
+  DB_NAME: "skillExchange"
+  DB_HOST: "mongodb-service"
+  DB_PORT: "27017"
+  
+  # Application settings
+  APP_NAME: "Skill Exchange"
+  LOG_LEVEL: "info"
+  
+  # Health check endpoint
+  HEALTH_CHECK_PATH: "/health"
+  
+  # File upload settings
+  UPLOAD_PATH: "/app/public/uploads"
+  MAX_FILE_SIZE: "5242880" # 5MB in bytes

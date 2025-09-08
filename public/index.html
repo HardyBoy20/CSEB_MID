@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill Exchange - Login</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">Skill Exchange</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#" class="active">Login</a></li>
+        <li><a href="register.html">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+    <!-- Login Block -->
+    <main class="auth-container">
+    <div class="auth-card">
+      <h2>Welcome Back</h2>
+      <form id="loginForm">
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <button type="submit" class="btn-primary">Login</button>
+      </form>
+      <p class="text-sm">Don't have an account? <a href="register.html">Register here</a></p>
+    </div>
+    <!-- Community Talk Application Form -->
+    <div class="talk-card">
+      <h2>Apply for a Community Talk</h2>
+      <form action="https://formcarry.com/s/-LcsCx8BNSK" method="POST" accept-charset="UTF-8">
+        <div class="input-group">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+        <div class="input-group">
+          <label for="topic">Talk Topic</label>
+          <input type="text" id="topic" name="topic" placeholder="e.g., DevOps for Beginners" required />
+        </div>
+        <div class="input-group">
+          <label for="description">Brief Description</label>
+          <textarea id="description" name="description" rows="3" required></textarea>
+        </div>
+        <div class="input-group">
+          <label for="date">Preferred Date (Optional)</label>
+          <input type="date" id="date" name="date" />
+        </div>
+        <input type="hidden" name="_redirect" value="index.html">
+        <button type="submit" class="btn-primary">Apply to Host</button>
+      </form>
+    </div>
+  </main>
+  <script>
+    // Add event listener to login form submit
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();// Prevent default form submission
+      // Get form values
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      // Make API request to backend for login
+      fetch("/api/login", {
+         method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ username, password }),
+})
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Invalid login credentials");
+          }
+          return res.json();
+        })
+        .then((data) => {
+  localStorage.setItem("currentUsername", data.username);
+  localStorage.setItem("userContact", data.contact); // ✅ Store mobile number
+  alert("✅ Login successful!");
+  window.location.href = "dashboard.html";
+})
+        .catch((err) => {
+          alert("❌ " + err.message);
+        });
+    });
+  </script>
+</body>
+</html>

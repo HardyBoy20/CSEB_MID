@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Skill Exchange</title>
+  <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
+    <script src="https://files.bpcontent.cloud/2025/08/16/16/20250816161859-V1ES8PM4.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">Skill Exchange</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#">Dashboard</a></li>
+        <li><a href="listings.html">Skill Board</a></li>
+        <li><a href="post.html">Create Post</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li class="profile-dropdown">
+        <img src="3.jpg" alt="Profile" class="profile-pic-nav" id="profilePicNav">
+        <ul class="dropdown-menu" id="dropdownMenu">
+        <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="listings.html">Skill Board</a></li>
+    <li><a href="post.html">Create Post</a></li>
+    <li><a href="profile.html">My Profile</a></li>
+    <li><a href="#" id="logoutBtn">Logout</a></li>
+        </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="auth-container" style="flex-direction: row; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+     <!-- Left Column: Welcome + Cards -->
+  <div style="flex: 2; min-width: 300px;">
+    <!-- Flex Container: Welcome + Testimonials Side-by-Side -->
+<div style="display: flex; justify-content: space-between; align-items: stretch; flex-wrap: wrap; gap: 1.5rem;">
+
+  <!-- Welcome Section (Left) -->
+  <section class="auth-card" style="flex: 2; min-width: 300px; background-color: #e9f7ef; border-left: 6px solid #2e8b57; display: flex; flex-direction: column; justify-content: center;">
+    <div>
+<h2 id="welcomeMessage" style="margin-bottom: 0.5rem;">Welcome back 👋</h2>
+      <img src="1.jpg" alt="Community helping" style="width: 200px;">
+      <p>Here’s what you can do today:</p>
+    </div>
+    <img src="https://cdn-icons-png.flaticon.com/512/4315/4315445.png" alt="Welcome Illustration" width="90">
+  </section>
+
+  <!-- Testimonials Rotating (Right) -->
+  <aside class="auth-card" style="flex: 1; min-width: 680px; display: flex; flex-direction: column; justify-content: center; background: #f9f9f9; animation: fadeIn 1s ease;">
+    <h2 style="color: #2e8b57; margin-bottom: 1rem;">💬 What People Say</h2>
+    <div id="testimonialBox">
+      <p style="font-style: italic;" id="testimonialText">“Found a tutor in 10 mins! This platform truly works.”</p>
+      <p style="margin-top: 1rem; font-weight: 600;" id="testimonialAuthor">— Aditi Sharma</p>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Quick Access Cards -->
+    <section style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: space-around; margin-top: 1.5rem;">
+      <div class="auth-card" style="flex: 1; min-width: 250px; text-align: center;">
+        <h3>📤 Post a Skill</h3>
+        <p>Share your abilities with your community and help others.</p>
+        <a href="post.html" class="btn-primary" style="display: inline-block; margin-top: 1rem; width: auto;">Post Now</a>
+      </div>
+
+      <div class="auth-card" style="flex: 1; min-width: 250px; text-align: center;">
+        <h3>🔍 Find Help</h3>
+        <p>Browse requests and offers posted by community members.</p>
+        <a href="listings.html" class="btn-primary" style="display: inline-block; margin-top: 1rem; width: auto;">Browse</a>
+      </div>
+
+      <div class="auth-card" style="flex: 1; min-width: 250px; text-align: center;">
+        <h3>🧾 Your Profile</h3>
+        <p>Manage your personal profile and skill identity.</p>
+        <a href="profile.html" class="btn-primary" style="display: inline-block; margin-top: 1rem; width: auto;">View Profile</a>
+      </div>
+    </section>
+  </div>
+</main>
+   <script>
+  const profilePic = document.getElementById("profilePicNav");
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  profilePic.addEventListener("click", () => {
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+  });
+
+  // Close dropdown when clicked outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".profile-dropdown")) {
+      dropdownMenu.style.display = "none";
+    }
+  });
+
+  // Logout logic
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("currentUsername");
+    alert("👋 You have been logged out.");
+    window.location.href = "index.html";
+  });
+
+  // ✅ Fetch user info from backend using username in localStorage
+  const currentUsername = localStorage.getItem("currentUsername");
+
+  async function fetchUserData(username) {
+    try {
+      const response = await fetch(`/api/profile/${username}`);
+      if (!response.ok) throw new Error("User not found");
+      const user = await response.json();
+
+      const welcomeMsg = document.getElementById("welcomeMessage");
+      if (welcomeMsg) {
+        welcomeMsg.textContent = `Welcome back, ${user.name || user.username}! 👋`;
+      }
+    } catch (error) {
+      console.error("⚠️ Error fetching user profile:", error);
+    }
+  }
+
+  if (currentUsername) {
+    fetchUserData(currentUsername);
+  }
+
+  // Testimonials carousel
+  const testimonials = [
+    { text: "“Found a tutor in 10 mins! This platform truly works.”", author: "— Aditi Sharma" },
+    { text: "“Taught guitar to 3 kids nearby. So fulfilling!”", author: "— Ravi Mehra" },
+    { text: "“Chatbot guided me to a local repair guy. Super handy.”", author: "— Priya Desai, Working Professional" },
+    { text: "“I’ve offered babysitting and met 2 great families.”", author: "— Nisha Patel, Student" },
+    { text: "“This board helped me start freelancing in graphic design!”", author: "— Sneha Kulkarni, Designer" },
+    { text: "“Posted a plumbing help request and got replies within 1 hour!”", author: "— Ramesh Varma, Retired Engineer" }
+  ];
+
+  let index = 0;
+  const textEl = document.getElementById("testimonialText");
+  const authorEl = document.getElementById("testimonialAuthor");
+
+  setInterval(() => {
+    index = (index + 1) % testimonials.length;
+    textEl.textContent = testimonials[index].text;
+    authorEl.textContent = testimonials[index].author;
+  }, 3000);
+</script>
+</body>
+</html>
