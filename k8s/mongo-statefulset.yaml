@@ -57,8 +57,12 @@ spec:
         volumeMounts:
         - name: mongodb-data
           mountPath: /data/db
-      volumes:
-      - name: mongodb-data
-        hostPath:
-          path: /opt/mongodb/data/db
-          type: DirectoryOrCreate
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi
+      storageClassName: gp2 # or gp3 depending on your EKS storage class
