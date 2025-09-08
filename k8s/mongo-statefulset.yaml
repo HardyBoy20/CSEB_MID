@@ -23,12 +23,8 @@ spec:
         volumeMounts:
         - name: mongodb-data
           mountPath: /data/db
-  volumeClaimTemplates:
-  - metadata:
-      name: mongodb-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 5Gi
-      storageClassName: ""   # Important: leave empty for hostPath
+      volumes:
+      - name: mongodb-data
+        hostPath:
+          path: /mnt/data/mongodb   # This path will be created on the node
+          type: DirectoryOrCreate
