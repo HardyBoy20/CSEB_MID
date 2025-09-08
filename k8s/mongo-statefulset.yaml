@@ -65,4 +65,4 @@ spec:
       resources:
         requests:
           storage: 5Gi
-      storageClassName: gp2 # or gp3 depending on your EKS storage class
+      storageClassName: gp2-csi # or gp3 depending on your EKS storage class
