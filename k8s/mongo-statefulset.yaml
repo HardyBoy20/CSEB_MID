@@ -14,6 +14,8 @@ spec:
       labels:
         app: mongodb
     spec:
+      securityContext:            # ✅ Pod-level security context
+        fsGroup: 999              # Gives MongoDB container access to /data/db
       containers:
       - name: mongodb
         image: mongo:6.0
@@ -26,5 +28,5 @@ spec:
       volumes:
       - name: mongodb-data
         hostPath:
-          path: /mnt/data/mongodb   # This path will be created on the node
+          path: /mnt/data/mongodb   # ✅ Data will persist on this node's disk
           type: DirectoryOrCreate

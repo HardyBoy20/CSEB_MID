@@ -179,7 +179,7 @@ sudo docker push hardyboy20/skillexchange-app:v1.0
 ### Step 11: Push to AWS ECR
 ```bash
 # Create ECR repository (if not exists)
-aws ecr create-repository --repository-name skillexchange-app --region us-east-1
+aws ecr create-repository --repository-name skillexchange-app --region ap-south-1
 
 # Get ECR login token
 aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
