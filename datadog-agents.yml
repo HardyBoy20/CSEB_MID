@@ -1,0 +1,21 @@
+apiVersion: datadoghq.com/v2alpha1
+kind: DatadogAgent
+metadata:
+  name: datadog
+  namespace: datadog
+spec:
+  global:
+    clusterName: skillexchange-cluster
+    site: ap1.datadoghq.com   # ✅ Asia-Pacific site (use correct region)
+    credentials:
+      apiSecret:
+        secretName: datadog-secret  # ✅ K8s secret must exist in 'datadog' namespace
+        keyName: api-key           # ✅ Key inside the secret
+  features:
+    kubeStateMetricsCore:
+      enabled: true
+    logCollection:
+      enabled: true                # ✅ Collect logs from all pods
+    containerCollectAll: true      # ✅ Collect metrics from all containers
+    apm:
+      enabled: true                # ✅ Enable APM (tracing)
