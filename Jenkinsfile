@@ -58,43 +58,35 @@ pipeline {
                     sed -i "s|image: .*skillexchange.*|image: ${DOCKER_REPO}:${BUILD_NUMBER}|g" k8s/*.yaml
                     sed -i "s|image: hardyboy20/project-4:.*|image: ${DOCKER_REPO}:${BUILD_NUMBER}|g" k8s/*.yaml
                 '''
-                
-                // 👇 Inject AWS credentials before running kubectl
+
                 withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    file(credentialsId: 'eks-kubeconfig', variable: 'KUBECONFIG')
                 ]) {
-                    withEnv(["AWS_DEFAULT_REGION=${AWS_REGION}"]) {
-                        withKubeConfig([credentialsId: 'eks-kubeconfig']) {
-                            sh '''
-                                kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                    sh '''
+                        export AWS_DEFAULT_REGION=${AWS_REGION}
+                        echo "✅ Using AWS credentials for EKS in region ${AWS_REGION}"
 
-                                kubectl apply -f k8s/ -n ${NAMESPACE} || {
-                                    echo "Some resources failed, trying individual approach..."
-                                    for file in k8s/*.yaml; do
-                                        if ! grep -q "kind: StatefulSet" "$file"; then
-                                            echo "Applying $file"
-                                            kubectl apply -f "$file" -n ${NAMESPACE} || echo "Failed to apply $file"
-                                        fi
-                                    done
+                        # Ensure namespace exists
+                        kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
 
-                                    for file in k8s/*.yaml; do
-                                        if grep -q "kind: StatefulSet" "$file"; then
-                                            echo "Handling StatefulSet in $file"
-                                            kubectl apply -f "$file" -n ${NAMESPACE} || {
-                                                echo "StatefulSet update failed, trying rolling restart..."
-                                                kubectl rollout restart statefulset/mongodb -n ${NAMESPACE} || echo "Rolling restart failed"
-                                            }
-                                        fi
-                                    done
-                                }
-
-                                kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s || echo "Deployment rollout timeout"
-                                kubectl get pods -n ${NAMESPACE}
-                                echo "✅ Deployment completed!"
-                            '''
+                        # Apply manifests
+                        kubectl apply -f k8s/ -n ${NAMESPACE} || {
+                            echo "⚠️ Bulk apply failed, applying individually..."
+                            for file in k8s/*.yaml; do
+                                echo "Applying $file"
+                                kubectl apply -f "$file" -n ${NAMESPACE} || echo "Failed to apply $file"
+                            done
                         }
-                    }
+
+                        # Wait for deployment rollout
+                        kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s || echo "⚠️ Deployment rollout timeout"
+
+                        # Show final status
+                        kubectl get pods -n ${NAMESPACE}
+                        echo "✅ Deployment completed!"
+                    '''
                 }
             }
         }
