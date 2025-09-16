@@ -5,6 +5,7 @@ pipeline {
         DOCKER_REPO = 'hardyboy20/skillexchange-app'
         APP_NAME = 'skillexchange-app'
         NAMESPACE = 'skillexchange'
+        AWS_REGION = 'ap-south-1' // 👈 set your AWS region
     }
 
     stages {
@@ -23,17 +24,14 @@ pipeline {
             steps {
                 echo '🧪 Testing application...'
                 sh '''
-                    # Start test MongoDB
                     docker run --rm -d --name test-db mongo:7.0
                     sleep 10
 
-                    # Test database connection
                     docker run --rm --link test-db:mongodb \
                         -e MONGO_URI=mongodb://mongodb:27017/test \
                         ${DOCKER_REPO}:${BUILD_NUMBER} \
                         node -e "console.log('✅ App test passed')"
 
-                    # Cleanup
                     docker stop test-db
                 '''
             }
@@ -57,47 +55,46 @@ pipeline {
             steps {
                 echo '🚀 Deploying to Kubernetes...'
                 sh '''
-                    # Update image tag in k8s files
                     sed -i "s|image: .*skillexchange.*|image: ${DOCKER_REPO}:${BUILD_NUMBER}|g" k8s/*.yaml
                     sed -i "s|image: hardyboy20/project-4:.*|image: ${DOCKER_REPO}:${BUILD_NUMBER}|g" k8s/*.yaml
                 '''
                 
-                withKubeConfig([credentialsId: 'eks-kubeconfig']) {
-                    sh '''
-                        # Create namespace
-                        kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
-                        
-                        # Apply everything except StatefulSets first
-                        kubectl apply -f k8s/ -n ${NAMESPACE} || {
-                            echo "Some resources failed, trying individual approach..."
-                            
-                            # Apply non-StatefulSet resources
-                            for file in k8s/*.yaml; do
-                                if ! grep -q "kind: StatefulSet" "$file"; then
-                                    echo "Applying $file"
-                                    kubectl apply -f "$file" -n ${NAMESPACE} || echo "Failed to apply $file"
-                                fi
-                            done
-                            
-                            # Handle StatefulSets separately
-                            for file in k8s/*.yaml; do
-                                if grep -q "kind: StatefulSet" "$file"; then
-                                    echo "Handling StatefulSet in $file"
-                                    kubectl apply -f "$file" -n ${NAMESPACE} || {
-                                        echo "StatefulSet update failed, trying rolling restart..."
-                                        kubectl rollout restart statefulset/mongodb -n ${NAMESPACE} || echo "Rolling restart failed"
-                                    }
-                                fi
-                            done
+                // 👇 Inject AWS credentials before running kubectl
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    withEnv(["AWS_DEFAULT_REGION=${AWS_REGION}"]) {
+                        withKubeConfig([credentialsId: 'eks-kubeconfig']) {
+                            sh '''
+                                kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+
+                                kubectl apply -f k8s/ -n ${NAMESPACE} || {
+                                    echo "Some resources failed, trying individual approach..."
+                                    for file in k8s/*.yaml; do
+                                        if ! grep -q "kind: StatefulSet" "$file"; then
+                                            echo "Applying $file"
+                                            kubectl apply -f "$file" -n ${NAMESPACE} || echo "Failed to apply $file"
+                                        fi
+                                    done
+
+                                    for file in k8s/*.yaml; do
+                                        if grep -q "kind: StatefulSet" "$file"; then
+                                            echo "Handling StatefulSet in $file"
+                                            kubectl apply -f "$file" -n ${NAMESPACE} || {
+                                                echo "StatefulSet update failed, trying rolling restart..."
+                                                kubectl rollout restart statefulset/mongodb -n ${NAMESPACE} || echo "Rolling restart failed"
+                                            }
+                                        fi
+                                    done
+                                }
+
+                                kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s || echo "Deployment rollout timeout"
+                                kubectl get pods -n ${NAMESPACE}
+                                echo "✅ Deployment completed!"
+                            '''
                         }
-                        
-                        # Wait for deployment rollout
-                        kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s || echo "Deployment rollout timeout"
-                        
-                        # Show final status
-                        kubectl get pods -n ${NAMESPACE}
-                        echo "✅ Deployment completed!"
-                    '''
+                    }
                 }
             }
         }
