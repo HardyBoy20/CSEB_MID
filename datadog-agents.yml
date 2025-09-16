@@ -16,6 +16,5 @@ spec:
       enabled: true
     logCollection:
       enabled: true                # ✅ Collect logs from all pods
-    containerCollectAll: true      # ✅ Collect metrics from all containers
     apm:
       enabled: true                # ✅ Enable APM (tracing)
